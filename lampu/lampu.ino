@@ -1,5 +1,8 @@
+#include <EEPROM.h>
+#include <EEWrap.h>
 #include <ezButton.h>
 #include <Buzzer.h>
+
 #define lampu1 1
 #define lampu2 2
 #define lampu3 4
@@ -11,11 +14,14 @@
 #define lampuB 11
 //#define remoteA=A1;
 //#define remoteB=A2;
+int16_e JUMLAHKLIK EEMEM;
+
 
 Buzzer buzzer(5, 6);
-ezButton button(A4);
-ezButton tombolA(A1);
-ezButton tombolB(A2);
+ezButton button(A4);// TOMBOL FISIK 2
+ezButton tombolA(A1);//TOMBOL remot A
+ezButton tombolB(A2);//Tombol Remot B
+ezButton tombolC(A3); //TOMBOL FISIK1
 byte banyakLampu = 4;
 const byte lamp[] = {2, 4, 7, 8};
 byte jumlahKlik = 1;
@@ -33,15 +39,29 @@ unsigned long previousMillis = 0;
 const long interval = 2000;
 const long interval15 = 920000;
 const long interval30 = 1820000;
-const long interval160 = 3620000;
-const long intervalCustom = 40000;
+const long interval160 = 2720000;
+const long intervalCustom = 3620000;
 const long delayAwal = 20000;
+
+//blyink withoud delay
+//const int ledPin =  LED_BUILTIN;// the number of the LED pin
+
+// Variables will change:
+int ledStateBlink = LOW;             // ledState used to set the LED
+
+// Generally, you should use "unsigned long" for variables that hold time
+// The value will quickly become too large for an int to store
+unsigned long previousMillisBlink = 0;        // will store last time LED was updated
+
+// constants won't change:
+const long intervalBlink = 1000;
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
   button.setDebounceTime(50);
   tombolA.setDebounceTime(50);
   tombolB.setDebounceTime(50);
+  tombolC.setDebounceTime(50);
   button.setCountMode(COUNT_FALLING);
   pinMode(relayPin, OUTPUT);
   digitalWrite(relayPin, HIGH);
@@ -52,21 +72,23 @@ void setup() {
   pinMode(lampuR, OUTPUT);
   pinMode(lampuG, OUTPUT);
   pinMode(lampuB, OUTPUT);
-
+  jumlahKlik = JUMLAHKLIK;
 }
+
 
 void loop() {
   // put your main code here, to run repeatedly:
   button.loop();
   tombolA.loop();
   tombolB.loop();
+  
 
   currentMillis = millis();
 
 
 
   lampu(tombolHitung());
- warnaLampuRGB(3);
+  warnaLampuRGB(3);
 
 
 }
@@ -79,6 +101,9 @@ int hidupLampu(byte lampu) {
       while (1) {
         button.loop();
         tombolA.loop();
+         tombolB.loop();
+         tombolC.loop();
+        blinkLed();
         currentMillis = millis();
         //Serial.println("dua");
         Serial.print(interval15);
@@ -86,12 +111,13 @@ int hidupLampu(byte lampu) {
         Serial.println(currentMillis - previousMillisPressButton);
         if ((currentMillis - previousMillisPressButton >= 20000)) {
           digitalWrite(relayPin, LOW);
+           
           if (x < 2) {
             buzzerSound2();
             x += 1;
           }
         }
-        if ((currentMillis - previousMillisPressButton >= (interval15)) || button.isPressed() || tombolA.isPressed())
+        if ((currentMillis - previousMillisPressButton >= (interval15)) || button.isPressed() || tombolA.isPressed()||tombolB.isPressed()||tombolC.isPressed())
         {
           //return true;
           if (button.isPressed() || tombolA.isPressed()) {
@@ -113,6 +139,9 @@ int hidupLampu(byte lampu) {
       while (1) {
         button.loop();
         tombolA.loop();
+         tombolB.loop();
+         tombolC.loop();
+        blinkLed();
         currentMillis = millis();
         //Serial.println("dua");
         Serial.print(interval15);
@@ -120,12 +149,13 @@ int hidupLampu(byte lampu) {
         Serial.println(currentMillis - previousMillisPressButton);
         if ((currentMillis - previousMillisPressButton >= 20000)) {
           digitalWrite(relayPin, LOW);
+           
           if (x < 2) {
             buzzerSound2();
             x += 1;
           }
         }
-        if ((currentMillis - previousMillisPressButton >= (interval30)) || button.isPressed() || tombolA.isPressed())
+        if ((currentMillis - previousMillisPressButton >= (interval30)) || button.isPressed() || tombolA.isPressed()||tombolB.isPressed()||tombolC.isPressed())
         {
           //return true;
           if (button.isPressed() || tombolA.isPressed()) {
@@ -146,6 +176,9 @@ int hidupLampu(byte lampu) {
       while (1) {
         button.loop();
         tombolA.loop();
+        tombolB.loop();
+        tombolC.loop();
+        blinkLed();
         currentMillis = millis();
         //Serial.println("dua");
         Serial.print(interval30);
@@ -153,13 +186,14 @@ int hidupLampu(byte lampu) {
         Serial.println(currentMillis - previousMillisPressButton);
         if ((currentMillis - previousMillisPressButton >= 20000)) {
           digitalWrite(relayPin, LOW);
+          
           if (x < 2) {
             buzzerSound2();
             x += 1;
           }
         }
 
-        if ((currentMillis - previousMillisPressButton >= (interval160)) || button.isPressed() || tombolA.isPressed())
+        if ((currentMillis - previousMillisPressButton >= (interval160)) || button.isPressed() || tombolA.isPressed()||tombolB.isPressed()||tombolC.isPressed())
         {
           //return true;
           if (button.isPressed() || tombolA.isPressed()) {
@@ -180,6 +214,9 @@ int hidupLampu(byte lampu) {
       while (1) {
         button.loop();
         tombolA.loop();
+        tombolB.loop();
+        tombolC.loop();
+        blinkLed();
         currentMillis = millis();
         //Serial.println("dua");
         Serial.print(intervalCustom);
@@ -187,12 +224,13 @@ int hidupLampu(byte lampu) {
         Serial.println(currentMillis - previousMillisPressButton);
         if ((currentMillis - previousMillisPressButton >= 20000)) {
           digitalWrite(relayPin, LOW);
+           
           if (x < 2) {
             buzzerSound2();
             x += 1;
           }
         }
-        if ((currentMillis - previousMillisPressButton >= (intervalCustom)) || button.isPressed() || tombolA.isPressed())
+        if ((currentMillis - previousMillisPressButton >= (intervalCustom)) || button.isPressed() || tombolA.isPressed()||tombolB.isPressed()||tombolC.isPressed())
         {
           //return true;
           if (button.isPressed() || tombolA.isPressed()) {
@@ -207,6 +245,7 @@ int hidupLampu(byte lampu) {
 
       }
       break;
+      
     default:
       // statements
       break;
@@ -285,7 +324,7 @@ int tombolHitung() {
     jumlahKlik += 1;
 
   }
-
+  JUMLAHKLIK = jumlahKlik;
   Serial.println(jumlahKlik);
   return jumlahKlik;
 }
@@ -324,6 +363,12 @@ void lampu(int nomor) {
       digitalWrite(lamp[2], LOW);
       digitalWrite(lamp[3], HIGH);
       break;
+    case 0:
+      digitalWrite(lamp[0], LOW);
+      digitalWrite(lamp[1], LOW);
+      digitalWrite(lamp[2], LOW);
+      digitalWrite(lamp[3], LOW);
+      break;
     default:
       //      namaLampu = 0;
       break;
@@ -340,6 +385,27 @@ void lampu(int nomor) {
   //    }
   //  }
 
+}
+
+void blinkLed(){
+  unsigned long currentMillisBlink = millis();
+
+  if (currentMillisBlink - previousMillisBlink >= intervalBlink) {
+    // save the last time you blinked the LED
+    previousMillisBlink = currentMillisBlink;
+
+    // if the LED is off turn it on and vice-versa:
+    if (ledStateBlink == LOW) {
+      ledStateBlink = HIGH;
+      lampu(jumlahKlik);
+    } else {
+      ledStateBlink = LOW;
+      lampu(0);
+    }
+
+    // set the LED with the ledState of the variable:
+    
+  }
 }
 
 void warnaLampuRGB(int var) {
